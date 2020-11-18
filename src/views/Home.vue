@@ -76,7 +76,6 @@ export default {
     canvas(){
       return document.getElementById('canvas');
     },
-    
     storedValues() {
       let colors = [];
       for (var i = 0; i < this.outputs.length; i++) {
