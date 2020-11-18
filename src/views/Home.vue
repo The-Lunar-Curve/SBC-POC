@@ -14,7 +14,7 @@
       <v-btn color="black" dark x-large @click="printAll">
         Find
       </v-btn>
-    </v-col>
+    </v-col> 
     <v-col cols="4" class="d-flex align-center justify-center">
       <v-text-field
       label="Number of colors"
@@ -42,7 +42,7 @@
   <v-row class="mt-8">
     <v-col cols="2" class="d-flex align-items" v-for="(item, index) in outputs" :key="index">
       <div class="prime ml-2" :style="{backgroundColor: `rgb(${item.rgb})`}">
-        {{item.rgb}}
+        {{item.value}}
       </div>
     </v-col>
   </v-row>
@@ -50,6 +50,7 @@
 </template>
 
 <script>
+import orderBy from 'lodash.orderby';
 
 export default {
   name: 'Home',
@@ -59,12 +60,13 @@ export default {
       outputs: [],
       images: ['65535/50604677206_d4f1a369da_k.jpg', '1466/25978996034_4d049d33aa_z.jpg'],
       colors: 5,
-      tolerance: 100
+      tolerance: 20,
+      clusteredColors: []
     }
   },
   mounted(){
     this.img.crossOrigin = 'anonymous';
-    this.img.src = `https://live.staticflickr.com/${this.images[1]}`;
+    this.img.src = `https://live.staticflickr.com/${this.images[0]}`;
 
       this.ctx = this.canvas.getContext('2d');
       this.ctx.drawImage(this.img, 0, 0);
@@ -119,36 +121,36 @@ export default {
         }
       }
 
-      // find dominent colors
+
+      let newColorArray = [];
+      for ( var newColor in allColors){
+        newColorArray.push({
+          ...allColors[newColor]
+        })
+      }
+      let sortedColors = orderBy(newColorArray, 'value', 'desc');
+      this.clusteredColors = [];
+
       for (var index = 0; index < this.colors; index++) {
-        let newColorArray = [];
 
-        for ( var newColor in allColors){
-          if (this.storedValues.includes(allColors[newColor].key)) {
-            continue;
-          } else {
-            if (this.outputs && this.outputs.length) {
+        sortedColors.forEach((element) => {
 
-              let redDifference = Math.abs(allColors[newColor].red - this.outputs[this.outputs.length - 1].red);
-              let greenDifference = Math.abs(allColors[newColor].green - this.outputs[this.outputs.length - 1].green);
-              let blueDifference = Math.abs(allColors[newColor].blue - this.outputs[this.outputs.length - 1].blue);
+        if (this.outputs.length) {
 
-              if (redDifference > this.tolerance ||  greenDifference > this.tolerance || blueDifference > this.tolerance) {
-                newColorArray.push({
-                  ...allColors[newColor]
-                });
-              }
-            } else {
-              newColorArray.push({
-                ...allColors[newColor]
-              });
-            }
-          }
+          let redDiff = Math.abs(element.red - this.outputs[this.outputs.length - 1].red)
+          let greenDiff = Math.abs(element.green - this.outputs[this.outputs.length - 1].green)
+          let blueDiff = Math.abs(element.blue - this.outputs[this.outputs.length - 1].blue)
+
+          if (redDiff > this.tolerance && greenDiff > this.tolerance && blueDiff > this.tolerance) {
+            this.clusteredColors.push(element)
+          } 
+        } else {
+          this.clusteredColors.push(element);
         }
+      });
+    
 
-        let maximum = Math.max.apply(Math, newColorArray.map((o) => { return o.value; }))
-        let greatestColor = newColorArray.find((o) => { return o.value === maximum; })
-        this.outputs.push(greatestColor);
+        this.outputs.push(this.clusteredColors[index]);
       }
 
     }
