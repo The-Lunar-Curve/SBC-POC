@@ -1,67 +1,61 @@
 <template>
   <v-container>
-  <div class="menu">
-    <v-list color="#eee">
-      <v-text-field
-      label="Number of colors"
-      v-model="colors"
-      outlined
-      type="number"
-      >
-      </v-text-field>
-      <v-text-field
-      label="tolerance"
-      v-model="tolerance"
-      outlined
-      type="number"
-      >
-      </v-text-field>
-
-      <v-text-field
-      label="link"
-      v-model="link"
-      outlined
-      type="text"
-      >
-      </v-text-field>
-
-      <v-btn :loading="isLoading" color="black" dark x-large @click="printAll(tolerance)">
-        Find
-      </v-btn>
-    </v-list>
-
-
-  </div>
-<template v-if="outputs && outputs.length">
-<h4 class="mt-8">Exacts</h4>
-  <v-row>
-    <v-col cols="2" class="d-flex align-items" v-for="(item) in outputs" :key="item.value">
-      <div class="prime ml-2" :style="{backgroundColor: `rgb(${item.rgb})`}">
-        <div>
-        {{item.value}}
-        </div>
-        <div>
-        {{item.rgb}}
-        </div>
-      </div>
-    </v-col>
-  </v-row>
-</template>
-
-<template v-if="clusteredAverages && clusteredAverages.length">
-  <h4 class="mt-8">Averages</h4>
-  <v-row>
-    <v-col cols="2" class="d-flex align-items" v-for="(item, index) in clusteredAverages" :key="index">
-      <div class="prime ml-2" :style="{backgroundColor: `rgb(${item.rgb})`}">
-        <div>
-        {{item.rgb}}
-        </div>
-      </div>
-    </v-col>
-  </v-row>
-</template>
-	<canvas id="canvas" width="1500" height="1000"></canvas>
-
+    <div class="menu">
+      <v-list color="#eee">
+        <v-text-field
+        label="Number of colors"
+        v-model="colors"
+        outlined
+        type="number"
+        >
+        </v-text-field>
+        <v-text-field
+        label="tolerance"
+        v-model="tolerance"
+        outlined
+        type="number"
+        >
+        </v-text-field>
+        <v-text-field
+        label="link"
+        v-model="link"
+        outlined
+        type="text"
+        >
+        </v-text-field>
+        <v-btn :loading="isLoading" color="black" dark x-large @click="printAll(tolerance)">
+          Find
+        </v-btn>
+      </v-list>
+    </div>
+    <template v-if="outputs && outputs.length">
+    <h4 class="mt-8">Exacts</h4>
+      <v-row>
+        <v-col cols="2" class="d-flex align-items" v-for="(item) in outputs" :key="item.value">
+          <div class="prime ml-2" :style="{backgroundColor: `rgb(${item.rgb})`}">
+            <div>
+            {{item.value}}
+            </div>
+            <div>
+            {{item.rgb}}
+            </div>
+          </div>
+        </v-col>
+      </v-row>
+    </template>
+    <template v-if="clusteredAverages && clusteredAverages.length">
+      <h4 class="mt-8">Averages</h4>
+      <v-row>
+        <v-col cols="2" class="d-flex align-items" v-for="(item, index) in clusteredAverages" :key="index">
+          <div class="prime ml-2" :style="{backgroundColor: `rgb(${item.rgb})`}">
+            <div>
+            {{item.rgb}}
+            </div>
+          </div>
+        </v-col>
+      </v-row>
+    </template>
+	  <canvas id="canvas" width="1500" height="1000"></canvas>
   </v-container>
 </template>
 
@@ -106,14 +100,15 @@ export default {
     canvas(){
       return document.getElementById('canvas');
     },
-    clusteredAverages(){
+    clusteredAverages() {
+
       let clusteredAverages = [];
       this.clusteredColors.forEach((array, index) => {
         var redSum = 0;
         var greenSum = 0;
         var blueSum = 0;
 
-        for(var item in array) {
+        for( var item in array ) {
             redSum += array[item].red;
             greenSum += array[item].green;
             blueSum += array[item].blue;
@@ -126,6 +121,7 @@ export default {
         var blueAvg = blueSum / count;
         clusteredAverages[index] = {red: redAvg, green: greenAvg, blue: blueAvg, rgb: `${Math.round(redAvg)}, ${Math.round(greenAvg)}, ${Math.round(blueAvg)}`};
       });
+
     return clusteredAverages;
     }
   },
@@ -144,7 +140,6 @@ export default {
         // map unique colors
         for (var i = 0; i < data.length; i += 4) {
           var color = `${data[i]}-${data[i + 1]}-${data[i + 2]}`;
-
 
           if (allColors[color]) {
             allColors[color].value++
@@ -172,27 +167,23 @@ export default {
         sortedColors.forEach((element) => {
 
           const ifArrayMatches = (array, index) => {
+            let redDiff = Math.abs(this.clusteredAverages[index].red - element.red)
+            let greenDiff = Math.abs(this.clusteredAverages[index].green - element.green)
+            let blueDiff = Math.abs(this.clusteredAverages[index].blue - element.blue)
 
-                let redDiff = Math.abs(this.clusteredAverages[index].red - element.red)
-                let greenDiff = Math.abs(this.clusteredAverages[index].green - element.green)
-                let blueDiff = Math.abs(this.clusteredAverages[index].blue - element.blue)
-
-                if (redDiff < tolerance && greenDiff < tolerance && blueDiff < tolerance) {
-                  return true
-                } else {
-                  return false
-                }
+            if (redDiff < tolerance && greenDiff < tolerance && blueDiff < tolerance) {
+              return true
+            } else {
+              return false
+            }
           };
           
-
           if (this.clusteredColors.length >= this.colors) return;
           
           // clusters exist
           if (this.clusteredColors && this.clusteredColors.length) {
 
-
             // find index of array that matches
-            
             let matchIndex = this.clusteredColors.findIndex(ifArrayMatches);
             if (matchIndex >= 0) {
               this.clusteredColors[matchIndex].push(element);
@@ -202,7 +193,6 @@ export default {
           } else {
             this.clusteredColors.push([element]);
           }
-          
         });
         
         for (var colorIndex = 0; colorIndex < this.colors; colorIndex++) {
@@ -214,7 +204,6 @@ export default {
           this.setOutputs(outputs);
           this.isLoading = false;
       }
-
       },
       setOutputs(payload){
         this.outputs = payload;
@@ -240,24 +229,21 @@ export default {
   justify-content: flex-start;
   flex-direction: column;
 }
-    .color-cell {
-      color: white;
-    }
-    .prime {
-      width: 100%;
-      height: 100%;
-      max-width: 120px;
-      max-height: 120px;
-      min-width: 120px;
-      min-height: 120px;
-      margin: 5px;
-      background-color: #eee;
-      border-radius: 50%;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      justify-content: center;
-      color: #ffffff;
-      border: 1px solid #eee;
-    }
+.prime {
+  width: 100%;
+  height: 100%;
+  max-width: 120px;
+  max-height: 120px;
+  min-width: 120px;
+  min-height: 120px;
+  margin: 5px;
+  background-color: #eee;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  border: 1px solid #eee;
+}
 </style>
