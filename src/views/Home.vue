@@ -4,7 +4,7 @@
 		<tbody>
 			<tr>
 				<td>
-					<canvas id="canvas" width="700" height="700"></canvas>
+					<canvas id="canvas" width="1000" height="1000"></canvas>
 				</td>
 			</tr>
 		</tbody>
@@ -107,6 +107,8 @@ export default {
       // map unique colors
       for (var i = 0; i < data.length; i += 4) {
         var color = `${data[i]}-${data[i + 1]}-${data[i + 2]}`;
+
+
         if (allColors[color]) {
           allColors[color].value++
         } else {
@@ -121,39 +123,63 @@ export default {
         }
       }
 
-
       let newColorArray = [];
       for ( var newColor in allColors){
         newColorArray.push({
           ...allColors[newColor]
         })
       }
+
       let sortedColors = orderBy(newColorArray, 'value', 'desc');
-      this.clusteredColors = [];
 
-      for (var index = 0; index < this.colors; index++) {
+      sortedColors.forEach((element) => {
 
-        sortedColors.forEach((element) => {
+        const isBelowThreshold = ((currentValue) => {
+            let redDiff = Math.abs(currentValue.red - element.red)
+            let greenDiff = Math.abs(currentValue.green - element.green)
+            let blueDiff = Math.abs(currentValue.blue - element.blue)
 
-        if (this.outputs.length) {
+            if (redDiff < this.tolerance && greenDiff < this.tolerance && blueDiff < this.tolerance) {
+              return true
+            } else {
+              return false
+            }
+        });
 
-          let redDiff = Math.abs(element.red - this.outputs[this.outputs.length - 1].red)
-          let greenDiff = Math.abs(element.green - this.outputs[this.outputs.length - 1].green)
-          let blueDiff = Math.abs(element.blue - this.outputs[this.outputs.length - 1].blue)
+        const ifArrayMatches = (array) => array.every(isBelowThreshold);
 
-          if (redDiff > this.tolerance && greenDiff > this.tolerance && blueDiff > this.tolerance) {
-            this.clusteredColors.push(element)
-          } 
+        if (this.clusteredColors.length >= this.colors) return;
+        
+        // clusters exist
+        if (this.clusteredColors && this.clusteredColors.length) {
+
+          // find index of array that matches
+          
+          let matchIndex = this.clusteredColors.findIndex(ifArrayMatches);
+          if (matchIndex >= 0) {
+            this.clusteredColors[matchIndex].push(element);
+          } else {
+            this.clusteredColors.push([element]);
+          }
         } else {
-          this.clusteredColors.push(element);
+          this.clusteredColors.push([element]);
         }
+        
       });
-    
+      
 
-        this.outputs.push(this.clusteredColors[index]);
+
+      for (var colorIndex = 0; colorIndex < this.colors; colorIndex++) {
+        this.outputs.push(this.clusteredColors[colorIndex][0])
       }
+ 
+      // find all unique threshold colors ***
 
-    }
+      // this.clusteredColors.forEach((element) => {
+      //   this.outputs.push(element[0]);
+      // })
+
+      }
   }
 
 }
