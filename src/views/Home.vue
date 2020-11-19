@@ -55,7 +55,7 @@
         </v-col>
       </v-row>
     </template>
-	  <canvas id="canvas" width="1500" height="1000"></canvas>
+    <canvas id="canvas" width="1500" height="1000"></canvas>
   </v-container>
 </template>
 
