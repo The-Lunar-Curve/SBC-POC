@@ -10,7 +10,7 @@
         >
         </v-text-field>
         <v-text-field
-        label="tolerance"
+        label="threshold"
         v-model="tolerance"
         outlined
         type="number"
@@ -23,7 +23,7 @@
         type="text"
         >
         </v-text-field>
-        <v-btn :loading="isLoading" color="black" dark x-large @click="printAll(tolerance)">
+        <v-btn :loading="isLoading" color="black" dark x-large @click="extractColors(tolerance)">
           Find
         </v-btn>
       </v-list>
@@ -60,7 +60,7 @@
 </template>
 
 <script>
-import orderBy from 'lodash.orderby';
+import { extract } from '@/utils/extract';
 
 export default {
   name: 'Home',
@@ -126,7 +126,7 @@ export default {
     }
   },
   methods: {
-    printAll(tolerance){
+    extractColors(tolerance){
       this.isLoading = true;
 
       this.outputs = [];
@@ -134,62 +134,27 @@ export default {
       let outputs = [];
       try {
         var imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-        const data = imageData.data;
-        var allColors = {};
 
-        // map unique colors
-        for (var i = 0; i < data.length; i += 4) {
-          var color = `${data[i]}-${data[i + 1]}-${data[i + 2]}`;
-
-          if (allColors[color]) {
-            allColors[color].value++
-          } else {
-            allColors[color] = {
-              value: 1,
-              rgb: `${data[i]}, ${data[i + 1]}, ${data[i + 2]}`,
-              key: color,
-              red: data[i],
-              green: data[i+1],
-              blue: data[i+2]
-            }
-          }
-        }
-
-        let newColorArray = [];
-        for ( var newColor in allColors){
-          newColorArray.push({
-            ...allColors[newColor]
-          })
-        }
-
-        let sortedColors = orderBy(newColorArray, 'value', 'desc');
+        let uniqueColors = extract.uniqueColors(imageData.data);
+        let sortedColors = extract.sortedColors(uniqueColors);
 
         sortedColors.forEach((element) => {
 
-          const ifArrayMatches = (array, index) => {
-            let redDiff = Math.abs(this.clusteredAverages[index].red - element.red)
-            let greenDiff = Math.abs(this.clusteredAverages[index].green - element.green)
-            let blueDiff = Math.abs(this.clusteredAverages[index].blue - element.blue)
-
-            if (redDiff < tolerance && greenDiff < tolerance && blueDiff < tolerance) {
-              return true
-            } else {
-              return false
-            }
+          const ifClusterMatches = (array, index) => {
+            return extract.clusterMatches(tolerance, index, this.clusteredAverages, element);
           };
           
           if (this.clusteredColors.length >= this.colors) return;
           
-          // clusters exist
           if (this.clusteredColors && this.clusteredColors.length) {
+            let clusterIndex = this.clusteredColors.findIndex(ifClusterMatches);
 
-            // find index of array that matches
-            let matchIndex = this.clusteredColors.findIndex(ifArrayMatches);
-            if (matchIndex >= 0) {
-              this.clusteredColors[matchIndex].push(element);
+            if (clusterIndex >= 0) {
+              this.clusteredColors[clusterIndex].push(element);
             } else {
               this.clusteredColors.push([element]);
             }
+            
           } else {
             this.clusteredColors.push([element]);
           }
