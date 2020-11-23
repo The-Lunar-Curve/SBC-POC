@@ -1,55 +1,66 @@
 <template>
   <v-container>
-	<table>
-		<tbody>
-			<tr>
-				<td>
-					<canvas id="canvas" width="700" height="700"></canvas>
-				</td>
-			</tr>
-		</tbody>
-	</table>
-  <v-row class="d-flex align-start justify-center">
-    <v-col class="d-flex" cols="4">
-      <v-btn color="black" dark x-large @click="printAll">
-        Find
-      </v-btn>
-    </v-col>
-    <v-col cols="4" class="d-flex align-center justify-center">
-      <v-text-field
-      label="Number of colors"
-      v-model="colors"
-      outlined
-      type="number"
-      width="20px"
-      >
-
-      </v-text-field>
-    </v-col>
-    <v-col cols="4" class="d-flex align-center justify-center">
-      <v-text-field
-      label="tolernance"
-      v-model="tolerance"
-      outlined
-      type="number"
-      width="20px"
-      >
-
-      </v-text-field>
-    </v-col>
-  </v-row>
-
-  <v-row class="mt-8">
-    <v-col cols="2" class="d-flex align-items" v-for="(item, index) in outputs" :key="index">
-      <div class="prime ml-2" :style="{backgroundColor: `rgb(${item.rgb})`}">
-        {{item.rgb}}
-      </div>
-    </v-col>
-  </v-row>
+    <div class="menu">
+      <v-list color="#eee">
+        <v-text-field
+        label="Number of colors"
+        v-model="colors"
+        outlined
+        type="number"
+        >
+        </v-text-field>
+        <v-text-field
+        label="threshold"
+        v-model="tolerance"
+        outlined
+        type="number"
+        >
+        </v-text-field>
+        <v-text-field
+        label="link"
+        v-model="link"
+        outlined
+        type="text"
+        >
+        </v-text-field>
+        <v-btn :loading="isLoading" color="black" dark x-large @click="extractColors(tolerance)">
+          Find
+        </v-btn>
+      </v-list>
+    </div>
+    <template v-if="outputs && outputs.length">
+    <h4 class="mt-8">Exacts</h4>
+      <v-row>
+        <v-col cols="2" class="d-flex align-items" v-for="(item) in outputs" :key="item.value">
+          <div class="prime ml-2" :style="{backgroundColor: `rgb(${item.rgb})`}">
+            <div>
+            {{item.value}}
+            </div>
+            <div>
+            {{item.rgb}}
+            </div>
+          </div>
+        </v-col>
+      </v-row>
+    </template>
+    <template v-if="clusteredAverages && clusteredAverages.length">
+      <h4 class="mt-8">Averages</h4>
+      <v-row>
+        <v-col cols="2" class="d-flex align-items" v-for="(item, index) in clusteredAverages" :key="index">
+          <div class="prime ml-2" :style="{backgroundColor: `rgb(${item.rgb})`}">
+            <div>
+            {{item.rgb}}
+            </div>
+          </div>
+        </v-col>
+      </v-row>
+    </template>
+    <canvas id="canvas" width="1500" height="1000"></canvas>
   </v-container>
 </template>
 
 <script>
+import { extract } from '@/utils/extract';
 
 export default {
   name: 'Home',
@@ -58,121 +69,146 @@ export default {
       img: new Image(),
       outputs: [],
       images: ['65535/50604677206_d4f1a369da_k.jpg', '1466/25978996034_4d049d33aa_z.jpg'],
+      link: 'https://live.staticflickr.com/65535/50604677206_d4f1a369da_k.jpg',
       colors: 5,
-      tolerance: 100
+      tolerance: 45,
+      clusteredColors: [],
+      isLoading: false,
+      ctx: {}
+    }
+  },
+  watch: {
+    link(val){
+      this.ctx.clearRect(0, 0, this.canvas.width, this.canvas.height);
+
+      this.img.src = val;
+      this.ctx = {};
+      this.ctx = this.canvas.getContext('2d');
+      this.ctx.drawImage(this.img, 0, 0);
+      this.img.style.display = 'none';
     }
   },
   mounted(){
     this.img.crossOrigin = 'anonymous';
-    this.img.src = `https://live.staticflickr.com/${this.images[1]}`;
+    this.img.src = this.link;
 
-      this.ctx = this.canvas.getContext('2d');
-      this.ctx.drawImage(this.img, 0, 0);
-      this.img.style.display = 'none';
+    this.ctx = this.canvas.getContext('2d');
+    this.ctx.drawImage(this.img, 0, 0);
+    this.img.style.display = 'none';
   },
   computed: {
     canvas(){
       return document.getElementById('canvas');
     },
-    storedValues() {
-      let colors = [];
-      for (var i = 0; i < this.outputs.length; i++) {
-        let value = this.outputs[i].key
-        colors.push(value);
-      } 
-      return colors
+    clusteredAverages() {
+
+      let clusteredAverages = [];
+      this.clusteredColors.forEach((array, index) => {
+        var redSum = 0;
+        var greenSum = 0;
+        var blueSum = 0;
+
+        for( var item in array ) {
+            redSum += array[item].red;
+            greenSum += array[item].green;
+            blueSum += array[item].blue;
+        }
+        
+        var count = array.length;
+        
+        var redAvg = redSum / count;
+        var greenAvg = greenSum / count;
+        var blueAvg = blueSum / count;
+        clusteredAverages[index] = {red: redAvg, green: greenAvg, blue: blueAvg, rgb: `${Math.round(redAvg)}, ${Math.round(greenAvg)}, ${Math.round(blueAvg)}`};
+      });
+
+    return clusteredAverages;
     }
   },
   methods: {
-    pick(event, destination, ctx){
-      var x = event.layerX;
-      var y = event.layerY;
-      var pixel = ctx.getImageData(x, y, 1, 1);
-      var data = pixel.data;
+    extractColors(tolerance){
+      this.isLoading = true;
 
-      const rgba = `rgba(${data[0]}, ${data[1]}, ${data[2]}, ${data[3] / 255})`;
-      destination.style.background = rgba;
-      destination.textContent = rgba;
-
-      return rgba;
-    },
-    printAll(){
       this.outputs = [];
-      var imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
-      const data = imageData.data;
-      var allColors = {};
+      this.clusteredColors = [];
+      let outputs = [];
+      try {
+        var imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
 
-      // map unique colors
-      for (var i = 0; i < data.length; i += 4) {
-        var color = `${data[i]}-${data[i + 1]}-${data[i + 2]}`;
-        if (allColors[color]) {
-          allColors[color].value++
-        } else {
-          allColors[color] = {
-            value: 1,
-            rgb: `${data[i]}, ${data[i + 1]}, ${data[i + 2]}`,
-            key: color,
-            red: data[i],
-            green: data[i+1],
-            blue: data[i+2]
-          }
-        }
-      }
+        let uniqueColors = extract.uniqueColors(imageData.data);
+        let sortedColors = extract.sortedColors(uniqueColors);
 
-      // find dominent colors
-      for (var index = 0; index < this.colors; index++) {
-        let newColorArray = [];
+        sortedColors.forEach((element) => {
 
-        for ( var newColor in allColors){
-          if (this.storedValues.includes(allColors[newColor].key)) {
-            continue;
-          } else {
-            if (this.outputs && this.outputs.length) {
+          const ifClusterMatches = (array, index) => {
+            return extract.clusterMatches(tolerance, index, this.clusteredAverages, element);
+          };
+          
+          if (this.clusteredColors.length >= this.colors) return;
+          
+          if (this.clusteredColors && this.clusteredColors.length) {
+            let clusterIndex = this.clusteredColors.findIndex(ifClusterMatches);
 
-              let redDifference = Math.abs(allColors[newColor].red - this.outputs[this.outputs.length - 1].red);
-              let greenDifference = Math.abs(allColors[newColor].green - this.outputs[this.outputs.length - 1].green);
-              let blueDifference = Math.abs(allColors[newColor].blue - this.outputs[this.outputs.length - 1].blue);
-
-              if (redDifference > this.tolerance ||  greenDifference > this.tolerance || blueDifference > this.tolerance) {
-                newColorArray.push({
-                  ...allColors[newColor]
-                });
-              }
+            if (clusterIndex >= 0) {
+              this.clusteredColors[clusterIndex].push(element);
             } else {
-              newColorArray.push({
-                ...allColors[newColor]
-              });
+              this.clusteredColors.push([element]);
             }
+            
+          } else {
+            this.clusteredColors.push([element]);
           }
+        });
+        
+        for (var colorIndex = 0; colorIndex < this.colors; colorIndex++) {
+          outputs.push(this.clusteredColors[colorIndex][0])
         }
-
-        let maximum = Math.max.apply(Math, newColorArray.map((o) => { return o.value; }))
-        let greatestColor = newColorArray.find((o) => { return o.value === maximum; })
-        this.outputs.push(greatestColor);
+      } catch (error) {
+        console.log(error);
+      } finally {
+          this.setOutputs(outputs);
+          this.isLoading = false;
       }
-
-    }
+      },
+      setOutputs(payload){
+        this.outputs = payload;
+      }
   }
 
 }
 </script>
 <style lang="scss" scoped>
-    .color-cell {
-      color: white;
-    }
-    .prime {
-      width: 100%;
-      height: 100%;
-      max-width: 100px;
-      max-height: 100px;
-      min-width: 100px;
-      min-height: 100px;
-      margin: 5px;
-      background-color: #eee;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      color: #ffffff;
-    }
+#canvas {
+  transform: scale(.7);
+}
+.menu {
+  position: fixed;
+  width: 350px;
+  height: 100%;
+  background-color: #eee;
+  left: 0;
+  top: 0;
+  padding-top: 2em;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  flex-direction: column;
+}
+.prime {
+  width: 100%;
+  height: 100%;
+  max-width: 120px;
+  max-height: 120px;
+  min-width: 120px;
+  min-height: 120px;
+  margin: 5px;
+  background-color: #eee;
+  border-radius: 50%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  color: #ffffff;
+  border: 1px solid #eee;
+}
 </style>
