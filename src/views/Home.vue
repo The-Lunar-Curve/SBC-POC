@@ -28,34 +28,36 @@
         </v-btn>
       </v-list>
     </div>
-    <template v-if="outputs && outputs.length">
-    <h4 class="mt-8">Exacts</h4>
-      <v-row>
-        <v-col cols="2" class="d-flex align-items" v-for="(item) in outputs" :key="item.value">
-          <div class="prime ml-2" :style="{backgroundColor: `rgb(${item.rgb})`}">
-            <div>
-            {{item.value}}
+    <div class="content">
+      <template v-if="outputs && outputs.length">
+          <h4 class="mt-8">Exacts</h4>
+        <v-row>
+          <v-col cols="2" class="d-flex align-items" v-for="(item) in outputs" :key="item.value">
+            <div class="swatch ml-2" :style="{backgroundColor: `rgb(${item.rgb})`}">
+              <div>
+              {{item.value}}
+              </div>
+              <div>
+              {{item.rgb}}
+              </div>
             </div>
-            <div>
-            {{item.rgb}}
+          </v-col>
+        </v-row>
+      </template>
+      <template v-if="clusteredAverages && clusteredAverages.length">
+        <h4 class="mt-8">Averages</h4>
+        <v-row>
+          <v-col cols="2" class="d-flex align-items" v-for="(item, index) in clusteredAverages" :key="index">
+            <div class="swatch ml-2" :style="{backgroundColor: `rgb(${item.rgb})`}">
+              <div>
+              {{item.rgb}}
+              </div>
             </div>
-          </div>
-        </v-col>
-      </v-row>
-    </template>
-    <template v-if="clusteredAverages && clusteredAverages.length">
-      <h4 class="mt-8">Averages</h4>
-      <v-row>
-        <v-col cols="2" class="d-flex align-items" v-for="(item, index) in clusteredAverages" :key="index">
-          <div class="prime ml-2" :style="{backgroundColor: `rgb(${item.rgb})`}">
-            <div>
-            {{item.rgb}}
-            </div>
-          </div>
-        </v-col>
-      </v-row>
-    </template>
-    <canvas id="canvas" width="1500" height="1000"></canvas>
+          </v-col>
+        </v-row>
+      </template>
+      <canvas id="canvas" width="1500" height="1000"></canvas>
+    </div>
   </v-container>
 </template>
 
@@ -101,28 +103,7 @@ export default {
       return document.getElementById('canvas');
     },
     clusteredAverages() {
-
-      let clusteredAverages = [];
-      this.clusteredColors.forEach((array, index) => {
-        var redSum = 0;
-        var greenSum = 0;
-        var blueSum = 0;
-
-        for( var item in array ) {
-            redSum += array[item].red;
-            greenSum += array[item].green;
-            blueSum += array[item].blue;
-        }
-        
-        var count = array.length;
-        
-        var redAvg = redSum / count;
-        var greenAvg = greenSum / count;
-        var blueAvg = blueSum / count;
-        clusteredAverages[index] = {red: redAvg, green: greenAvg, blue: blueAvg, rgb: `${Math.round(redAvg)}, ${Math.round(greenAvg)}, ${Math.round(blueAvg)}`};
-      });
-
-    return clusteredAverages;
+      return extract.findClusterAverages(this.clusteredColors);
     }
   },
   methods: {
@@ -194,7 +175,18 @@ export default {
   justify-content: flex-start;
   flex-direction: column;
 }
-.prime {
+.content {
+  position: absolute;
+  top: 0;
+  left: 350px;
+  overflow: auto;
+  width: calc(100% - 350px);
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+.swatch {
   width: 100%;
   height: 100%;
   max-width: 120px;
