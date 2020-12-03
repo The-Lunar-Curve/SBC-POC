@@ -1,4 +1,4 @@
-# boilerplate-vue-framwork
+# Search By Color - Proof Of Concept
 
 ```
 Includes Vue Router, VueX, Vuetify, and Material Design Icons.
