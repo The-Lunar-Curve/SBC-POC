@@ -63,12 +63,14 @@
 
 <script>
 import { extract } from '@/utils/extract';
+import Flickr from 'flickr-sdk';
 
 export default {
   name: 'Home',
   data() {
     return {
       img: new Image(),
+      flickr: new Flickr(process.env.VUE_APP_FLICKR_API_KEY), 
       outputs: [],
       images: ['65535/50604677206_d4f1a369da_k.jpg', '1466/25978996034_4d049d33aa_z.jpg'],
       link: 'https://live.staticflickr.com/65535/50604677206_d4f1a369da_k.jpg',
@@ -97,6 +99,18 @@ export default {
     this.ctx = this.canvas.getContext('2d');
     this.ctx.drawImage(this.img, 0, 0);
     this.img.style.display = 'none';
+    this.flickr.photos.search({
+      safe_search: 3,
+      content_type: 1,
+      media: 'photos',
+      is_commons: true,
+      per_page: 3,
+      pages: 1
+    }).then((res) => {
+      console.log('yay!', res.body);
+    }).catch((err) => {
+      console.error('bonk', err);
+    });
   },
   computed: {
     canvas(){
