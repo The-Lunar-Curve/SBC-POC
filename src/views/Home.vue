@@ -142,10 +142,10 @@ export default {
         });
         
         for (var colorIndex = 0; colorIndex < this.colors; colorIndex++) {
-          let newColor = this.clusteredColors[colorIndex][0];
-          newColor.hex = extract.rgbToHexadecimal(newColor.red, newColor.green, newColor.blue);
+          let combinedColor = this.clusteredColors[colorIndex][0];
+          combinedColor.hex = extract.rgbToHexadecimal(combinedColor.red, combinedColor.green, combinedColor.blue);
 
-          outputs.push(newColor);
+          outputs.push(combinedColor);
         }
       } catch (error) {
         console.log(error);
