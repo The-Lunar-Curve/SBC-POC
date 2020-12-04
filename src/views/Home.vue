@@ -144,7 +144,6 @@ export default {
         for (var colorIndex = 0; colorIndex < this.colors; colorIndex++) {
           let combinedColor = this.clusteredColors[colorIndex][0];
           combinedColor.hex = extract.rgbToHexadecimal(combinedColor.red, combinedColor.green, combinedColor.blue);
-
           outputs.push(combinedColor);
         }
       } catch (error) {
