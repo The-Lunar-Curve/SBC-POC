@@ -63,22 +63,5 @@ export const extract = {
         });
   
       return clusteredAverages;
-    },
-    rgbToHexadecimal: (red,green,blue) => {
-        let redHex = red.toString(16);
-        let greenHex = green.toString(16);
-        let blueHex = blue.toString(16);
-
-        if (redHex.length === 1) {
-            redHex = '0' + redHex;
-        }
-        if (greenHex.length === 1) {
-            greenHex = '0' + greenHex;
-        }
-        if (blueHex.length === 1) {
-            blueHex = '0' + blueHex;
-        }
-
-        return '#' + redHex + greenHex + blueHex;
     }
 }
