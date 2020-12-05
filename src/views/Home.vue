@@ -23,7 +23,7 @@
         type="text"
         >
         </v-text-field>
-        <v-btn :loading="isLoading" color="black" dark x-large @click="extractColors(tolerance)">
+        <v-btn :loading="isLoading" color="black" dark x-large @click="extractColors(tolerance, 20)">
           Find
         </v-btn>
       </v-list>
@@ -107,13 +107,24 @@ export default {
     }
   },
   methods: {
-    extractColors(tolerance){
+    extractColors(tolerance, sample_size){
       this.isLoading = true;
 
       this.outputs = [];
       this.clusteredColors = [];
       let outputs = [];
       try {
+        let w = this.canvas.width;
+        let h = this.canvas.height;
+        let pixelArr = this.ctx.getImageData(0, 0, w, h).data;
+
+        for (let y = 0; y < h; y += sample_size) {
+          for (let x = 0; x < w; x += sample_size) {
+            let p = (x + (y*w)) * 4;
+            this.ctx.fillStyle = "rgba(" + pixelArr[p] + "," + pixelArr[p + 1] + "," + pixelArr[p + 2] + "," + pixelArr[p + 3] + ")";
+            this.ctx.fillRect(x, y, sample_size, sample_size);
+          }
+        }
         var imageData = this.ctx.getImageData(0, 0, this.canvas.width, this.canvas.height);
 
         let uniqueColors = extract.uniqueColors(imageData.data);
