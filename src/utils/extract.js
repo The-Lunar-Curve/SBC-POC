@@ -100,7 +100,11 @@ export const extract = {
             let saturation = (maxRGB - minRGB) / maxRGB;
             let brilliance = maxRGB;
 
-            return hue.toFixed(2) + ', ' + saturation.toFixed(2) + ', ' + brilliance.toFixed(2);
+            hue = hue.toFixed(2);
+            saturation = saturation.toFixed(2);
+            brilliance = brilliance.toFixed(2);
+
+            return `${hue}, ${saturation}, ${brilliance}`;
         }
     }
 }
