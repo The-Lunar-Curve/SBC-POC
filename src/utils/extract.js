@@ -80,5 +80,27 @@ export const extract = {
         }
 
         return '#' + redHex + greenHex + blueHex;
+    },
+    rgbToHSB: (red, green, blue) => {
+        let redQuotient = red/255;
+        let greenQuotient = green/255;
+        let blueQuotient = blue/255;
+        let minRGB = Math.min(redQuotient, Math.min(greenQuotient, blueQuotient));
+        let maxRGB = Math.max(redQuotient, Math.max(greenQuotient, blueQuotient));
+
+        // detects if color is white, gray, or black
+        if (minRGB===maxRGB) {
+            return [0,0,minRGB];
+        }
+        else {
+            let d = (redQuotient === minRGB) ? greenQuotient - blueQuotient : ((blueQuotient === minRGB) ? redQuotient - greenQuotient : blueQuotient - redQuotient);
+            let h = (redQuotient === minRGB) ? 3 : ((blueQuotient === minRGB) ? 1 : 5);
+
+            let hue = 60 * (h - d / (maxRGB - minRGB));
+            let saturation = (maxRGB - minRGB) / maxRGB;
+            let brilliance = maxRGB;
+
+            return hue.toFixed(2) + ', ' + saturation.toFixed(2) + ', ' + brilliance.toFixed(2);
+        }
     }
 }
