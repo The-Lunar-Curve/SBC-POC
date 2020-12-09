@@ -72,7 +72,7 @@ export default {
       img: new Image(),
       flickr: new Flickr(process.env.VUE_APP_FLICKR_API_KEY), 
       outputs: [],
-      images: ['65535/50604677206_d4f1a369da_k.jpg', '1466/25978996034_4d049d33aa_z.jpg'],
+      images:[],
       link: 'https://live.staticflickr.com/65535/50604677206_d4f1a369da_k.jpg',
       colors: 5,
       tolerance: 45,
@@ -118,6 +118,9 @@ export default {
     },
     clusteredAverages() {
       return extract.findClusterAverages(this.clusteredColors);
+    },
+    getRandomFlickrPhotos(){
+      this.getRandomPhotos();
     }
   },
   methods: {
@@ -167,8 +170,28 @@ export default {
       },
       setOutputs(payload){
         this.outputs = payload;
+      },
+      getRandomPhotos(){
+        this.flickr.photos.search({
+          safe_search: 3,
+          content_type: 1,
+          media: 'photos',
+          is_commons: true,
+          per_page: 3,
+          pages: 1
+        }).then((res) => {
+          const randomImages = res.body.photos.photo;
+          for (let i = 0; i < randomImages.length; i =+1){
+            this.images.push(`https://live.staticflickr.com/${randomImages[i].server}/${randomImages[i].id}_${randomImages[i].secret}`)
+          }
+          console.log(this.images);
+          return this.images;
+        }).catch((err) => {
+          console.error('bonk', err);
+          return;
+        });
       }
-  }
+  },
 
 }
 </script>
