@@ -159,7 +159,10 @@ export default {
         });
         
         for (var colorIndex = 0; colorIndex < this.colors; colorIndex++) {
-          outputs.push(this.clusteredColors[colorIndex][0])
+          let combinedColor = this.clusteredColors[colorIndex][0];
+          combinedColor.hex = extract.rgbToHexadecimal(combinedColor.red, combinedColor.green, combinedColor.blue);
+          combinedColor.hsb = extract.rgbToHSB(combinedColor.red, combinedColor.green, combinedColor.blue);
+          outputs.push(combinedColor);
         }
       } catch (error) {
         console.log(error);
