@@ -121,9 +121,6 @@ export default {
     },
     clusteredAverages() {
       return extract.findClusterAverages(this.clusteredColors);
-    },
-    getRandomFlickrPhotos(){
-      this.getRandomPhotos();
     }
   },
   methods: {
