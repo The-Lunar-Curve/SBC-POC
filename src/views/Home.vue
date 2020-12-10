@@ -26,6 +26,9 @@
         <v-btn :loading="isLoading" color="black" dark x-large @click="extractColors(tolerance)">
           Find
         </v-btn>
+        <v-btn :loading="isLoading" color="black" dark x-large @click="randomImages()">
+          Random Image
+        </v-btn>
       </v-list>
     </div>
     <div class="content">
