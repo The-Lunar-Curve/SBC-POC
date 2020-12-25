@@ -173,7 +173,7 @@ export default {
           pages: 1
         }).then((res) => {
             const randomImage = res.body.photos.photo[0];
-            this.link = `https://live.staticflickr.com/${randomImage.server}/${randomImage.id}_${randomImage.secret}_k`;
+            this.link = `https://live.staticflickr.com/${randomImage.server}/${randomImage.id}_${randomImage.secret}_b.jpg`;
         }).catch((err) => {
           console.error('failed to retrieve photo from api', err);
           return;
