@@ -26,7 +26,7 @@
         <v-btn :loading="isLoading" color="black" dark x-large @click="extractColors(tolerance)">
           Find
         </v-btn>
-        <v-btn :loading="isLoading" color="black" dark x-large @click="randomImages()">
+        <v-btn :loading="isLoading" color="black" dark x-large @click="getRandomPhotos()">
           Random Image
         </v-btn>
       </v-list>
@@ -102,18 +102,7 @@ export default {
     this.ctx = this.canvas.getContext('2d');
     this.ctx.drawImage(this.img, 0, 0);
     this.img.style.display = 'none';
-    this.flickr.photos.search({
-      safe_search: 3,
-      content_type: 1,
-      media: 'photos',
-      is_commons: true,
-      per_page: 3,
-      pages: 1
-    }).then((res) => {
-      console.log('yay!', res.body);
-    }).catch((err) => {
-      console.error('bonk', err);
-    });
+
   },
   computed: {
     canvas(){
@@ -180,17 +169,13 @@ export default {
           content_type: 1,
           media: 'photos',
           is_commons: true,
-          per_page: 3,
+          per_page: 1,
           pages: 1
         }).then((res) => {
-          const randomImages = res.body.photos.photo;
-          for (let i = 0; i < randomImages.length; i =+1){
-            this.images.push(`https://live.staticflickr.com/${randomImages[i].server}/${randomImages[i].id}_${randomImages[i].secret}`)
-          }
-          console.log(this.images);
-          return this.images;
+            const randomImage = res.body.photos.photo[0];
+            this.link = `https://live.staticflickr.com/${randomImage.server}/${randomImage.id}_${randomImage.secret}_k`;
         }).catch((err) => {
-          console.error('bonk', err);
+          console.error('failed to retrieve photo from api', err);
           return;
         });
       }
